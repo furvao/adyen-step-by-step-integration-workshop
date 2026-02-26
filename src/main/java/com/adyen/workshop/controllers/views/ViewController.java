@@ -22,6 +22,7 @@ public class ViewController {
 
     @GetMapping("/")
     public String index() {
+        log.debug("start / ");
         return "index";
     }
 

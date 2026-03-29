@@ -64,7 +64,7 @@ public class ApiController {
         var orderRef = UUID.randomUUID().toString();
         paymentRequest.setReference(orderRef);
         // The returnUrl field basically means: Once done with the payment, where should the application redirect you?
-        paymentRequest.setReturnUrl("https://fictional-succotash-p47xv6w659f7qww-8080.app.github.dev/handleShopperRedirect");
+        paymentRequest.setReturnUrl("https://turbo-space-couscous-x7rj64pqqgcvq4v.github.dev/handleShopperRedirect");
 
 
         // Step 12 3DS2 Redirect - Add the following additional parameters to your existing payment request for 3DS2 Redirect:
@@ -135,7 +135,7 @@ public class ApiController {
         log.info("PaymentsDetailsResponse {}", paymentsDetailsResponse);
 
         // Handle response and redirect user accordingly
-        var redirectURL = "https://fictional-succotash-p47xv6w659f7qww-8080.app.github.dev/result/"; // Update your url here by replacing `http://localhost:8080` with where your application is hosted (if needed)
+        var redirectURL = "https://turbo-space-couscous-x7rj64pqqgcvq4v.github.dev/result/"; // Update your url here by replacing `http://localhost:8080` with where your application is hosted (if needed)
         switch (paymentsDetailsResponse.getResultCode()) {
             case AUTHORISED:
                 redirectURL += "success";
@@ -152,6 +152,73 @@ public class ApiController {
                 break;
         }
         return new RedirectView(redirectURL + "?reason=" + paymentsDetailsResponse.getResultCode());
+    }
+
+    // Implements tokenization
+    @PostMapping("/api/subscription-create")
+    public ResponseEntity<PaymentResponse> subscription(@RequestBody PaymentRequest body) throws IOException, ApiException {
+
+        var paymentRequest = new PaymentRequest();
+        
+        var amount = new Amount()
+                .currency("EUR")
+                .value(0L);
+        paymentRequest.setAmount(amount);
+        paymentRequest.setStorePaymentMethod(true);
+        paymentRequest.setMerchantAccount(applicationConfiguration.getAdyenMerchantAccount());
+        paymentRequest.setRecurringProcessingModel(PaymentRequest.RecurringProcessingModelEnum.CARDONFILE);
+        paymentRequest.setChannel(PaymentRequest.ChannelEnum.WEB);
+        paymentRequest.setPaymentMethod(body.getPaymentMethod());
+        paymentRequest.setShopperInteraction(PaymentRequest.ShopperInteractionEnum.ECOMMERCE);
+        paymentRequest.setShopperReference("WORKSHOP_ADYEN");
+    
+        var orderRef = UUID.randomUUID().toString();
+        paymentRequest.setReference(orderRef);
+        // The returnUrl field basically means: Once done with the payment, where should the application redirect you?
+        paymentRequest.setReturnUrl("https://https://turbo-space-couscous-x7rj64pqqgcvq4v.github.dev/handleShopperRedirect");
+
+        var requestOptions = new RequestOptions();
+        requestOptions.setIdempotencyKey(UUID.randomUUID().toString());
+    
+        log.info("PaymentsRequest {}", paymentRequest);
+        var response = paymentsApi.payments(paymentRequest, requestOptions); // add RequestOptions here
+        log.info("PaymentsResponse {}", response);
+        
+        return ResponseEntity.ok().body(response);
+
+
+    }
+
+    // Implements payment with token
+    @PostMapping("/api/subscription-payment")
+    public ResponseEntity<PaymentResponse> paymentWithSubscription(@RequestBody PaymentRequest body) throws IOException, ApiException {
+
+        var paymentRequest = new PaymentRequest();
+        
+        paymentRequest.setAmount(body.getAmount());
+        paymentRequest.setStorePaymentMethod(true);
+        paymentRequest.setMerchantAccount(applicationConfiguration.getAdyenMerchantAccount());
+        paymentRequest.setRecurringProcessingModel(PaymentRequest.RecurringProcessingModelEnum.CARDONFILE);
+        paymentRequest.setChannel(PaymentRequest.ChannelEnum.WEB);
+        paymentRequest.setPaymentMethod(body.getPaymentMethod());
+        paymentRequest.setShopperInteraction(PaymentRequest.ShopperInteractionEnum.ECOMMERCE);
+        paymentRequest.setShopperReference("WORKSHOP_ADYEN");
+    
+        var orderRef = UUID.randomUUID().toString();
+        paymentRequest.setReference(orderRef);
+        // The returnUrl field basically means: Once done with the payment, where should the application redirect you?
+        paymentRequest.setReturnUrl("https://https://turbo-space-couscous-x7rj64pqqgcvq4v.github.dev/handleShopperRedirect");
+
+        var requestOptions = new RequestOptions();
+        requestOptions.setIdempotencyKey(UUID.randomUUID().toString());
+    
+        log.info("PaymentsRequest {}", paymentRequest);
+        var response = paymentsApi.payments(paymentRequest, requestOptions); // add RequestOptions here
+        log.info("PaymentsResponse {}", response);
+        
+        return ResponseEntity.ok().body(response);
+
+
     }
 
 }
